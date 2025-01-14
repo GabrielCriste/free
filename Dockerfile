@@ -1,11 +1,13 @@
+# Use a imagem base do Jupyter
 FROM quay.io/jupyter/base-notebook:2024-12-31
 
+# Mude para o usuário root para instalar pacotes
 USER root
 
+# Instale pacotes necessários para o desktop remoto e GPU
 RUN apt-get -y -qq update \
  && apt-get -y -qq install \
         dbus-x11 \
-        # xclip is added as jupyter-remote-desktop-proxy's tests requires it
         xclip \
         xfce4 \
         xfce4-panel \
@@ -14,47 +16,56 @@ RUN apt-get -y -qq update \
         xorg \
         xubuntu-icon-theme \
         fonts-dejavu \
-    # Disable the automatic screenlock since the account password is unknown
+        openjdk-11-jdk \
+        scala \
+        wget \
+    # Remove o bloqueio de tela
  && apt-get -y -qq remove xfce4-screensaver \
-    # chown $HOME to workaround that the xorg installation creates a
-    # /home/jovyan/.cache directory owned by root
-    # Create /opt/install to ensure it's writable by pip
+    # Ajusta permissões
  && mkdir -p /opt/install \
  && chown -R $NB_UID:$NB_GID $HOME /opt/install \
  && rm -rf /var/lib/apt/lists/*
 
-# Install a VNC server, either TigerVNC (default) or TurboVNC
-ARG vncserver=tigervnc
-RUN if [ "${vncserver}" = "tigervnc" ]; then \
-        echo "Installing TigerVNC"; \
-        apt-get -y -qq update; \
-        apt-get -y -qq install \
-            tigervnc-standalone-server \
-        ; \
-        rm -rf /var/lib/apt/lists/*; \
-    fi
-ENV PATH=/opt/TurboVNC/bin:$PATH
-RUN if [ "${vncserver}" = "turbovnc" ]; then \
-        echo "Installing TurboVNC"; \
-        # Install instructions from https://turbovnc.org/Downloads/YUM
-        wget -q -O- https://packagecloud.io/dcommander/turbovnc/gpgkey | \
-        gpg --dearmor >/etc/apt/trusted.gpg.d/TurboVNC.gpg; \
-        wget -O /etc/apt/sources.list.d/TurboVNC.list https://raw.githubusercontent.com/TurboVNC/repo/main/TurboVNC.list; \
-        apt-get -y -qq update; \
-        apt-get -y -qq install \
-            turbovnc \
-        ; \
-        rm -rf /var/lib/apt/lists/*; \
-    fi
+# Instale o servidor VNC (TigerVNC por padrão)
+RUN apt-get -y -qq update && \
+    apt-get -y -qq install tigervnc-standalone-server && \
+    rm -rf /var/lib/apt/lists/*
 
+# Instale o SBT (Scala Build Tool)
+RUN curl -sL https://github.com/sbt/sbt/releases/download/v1.8.0/sbt-1.8.0.deb -o sbt.deb && \
+    dpkg -i sbt.deb && rm sbt.deb
+
+# Configuração de ambiente
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV PATH=$PATH:/usr/local/sbt/bin
+
+# Copiar o repositório Storch e configurá-lo
+WORKDIR /home/jovyan
+RUN git clone https://github.com/GabrielCriste/storch.git
+WORKDIR /home/jovyan/storch
+RUN sbt compile
+
+# Instalar o kernel Almond para Scala no Jupyter
+RUN curl -Lo coursier https://git.io/coursier-cli && \
+    chmod +x coursier && \
+    ./coursier launch --fork almond -- --install && \
+    rm coursier
+
+# Configurar o ambiente Conda e instalar dependências
 USER $NB_USER
-
-# Install the environment first, and then install the package separately for faster rebuilds
 COPY --chown=$NB_UID:$NB_GID environment.yml /tmp
 RUN . /opt/conda/bin/activate && \
     mamba env update --quiet --file /tmp/environment.yml
 
+# Copiar o código do Jupyter Remote Desktop Proxy
 COPY --chown=$NB_UID:$NB_GID . /opt/install
 RUN . /opt/conda/bin/activate && \
     mamba install -y -q "nodejs>=22" && \
     pip install /opt/install
+
+# Expor portas para Jupyter e Desktop remoto
+EXPOSE 8888
+EXPOSE 5900
+
+# Definir o comando de inicialização
+CMD ["start.sh"]
