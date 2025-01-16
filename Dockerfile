@@ -7,6 +7,7 @@ USER root
 # Instalar dependências do sistema
 RUN apt-get -y -qq update \
  && apt-get -y -qq install \
+        firefox \
         dbus-x11 \
         xclip \
         xfce4 \
@@ -49,6 +50,9 @@ RUN if [ "${vncserver}" = "turbovnc" ]; then \
 
 # Retornar ao usuário padrão
 USER $NB_USER
+
+ADD . /opt/install 
+RUN fix-permissions /opt/install
 
 # Atualizar o ambiente Conda e instalar pacotes Python
 COPY --chown=$NB_UID:$NB_GID environment.yml /tmp
