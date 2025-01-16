@@ -25,6 +25,20 @@ RUN apt-get -y -qq update \
  && chown -R $NB_UID:$NB_GID $HOME /opt/install \
  && rm -rf /var/lib/apt/lists/*
 
+# Criar o atalho para o Firefox no desktop XFCE4
+RUN mkdir -p /root/Desktop && \
+    cat <<EOF > /root/Desktop/firefox.desktop
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Firefox
+Exec=firefox
+Icon=firefox
+Terminal=false
+Categories=Network;WebBrowser;
+EOF
+RUN chmod +x /root/Desktop/firefox.desktop
+
 # Instalar servidor VNC (TigerVNC como padrão)
 ARG vncserver=tigervnc
 RUN if [ "${vncserver}" = "tigervnc" ]; then \
@@ -51,8 +65,6 @@ RUN if [ "${vncserver}" = "turbovnc" ]; then \
 # Retornar ao usuário padrão
 USER $NB_USER
 
-
-
 # Atualizar o ambiente Conda e instalar pacotes Python
 COPY --chown=$NB_UID:$NB_GID environment.yml /tmp
 RUN . /opt/conda/bin/activate && \
@@ -63,8 +75,6 @@ COPY --chown=$NB_UID:$NB_GID . /opt/install
 RUN . /opt/conda/bin/activate && \
     mamba install -y -q "nodejs>=22" && \
     pip install /opt/install
-
-
 
 # Copiar o script de monitoramento para o contêiner
 COPY --chown=$NB_UID:$NB_GID monitor.py /opt/install/monitor.py
