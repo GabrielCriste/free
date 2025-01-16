@@ -1,11 +1,13 @@
+# Base image
 FROM quay.io/jupyter/base-notebook:2024-12-31
 
+# Executar comandos como root
 USER root
 
+# Instalar dependências do sistema
 RUN apt-get -y -qq update \
  && apt-get -y -qq install \
         dbus-x11 \
-        # xclip is added as jupyter-remote-desktop-proxy's tests requires it
         xclip \
         xfce4 \
         xfce4-panel \
@@ -14,19 +16,18 @@ RUN apt-get -y -qq update \
         xorg \
         xubuntu-icon-theme \
         fonts-dejavu \
-    # Disable the automatic screenlock since the account password is unknown
+        git \
+    # Desabilitar o bloqueio automático de tela
  && apt-get -y -qq remove xfce4-screensaver \
-    # chown $HOME to workaround that the xorg installation creates a
-    # /home/jovyan/.cache directory owned by root
-    # Create /opt/install to ensure it's writable by pip
+    # Corrigir permissões e criar diretório para pacotes adicionais
  && mkdir -p /opt/install \
  && chown -R $NB_UID:$NB_GID $HOME /opt/install \
  && rm -rf /var/lib/apt/lists/*
 
-# Install a VNC server, either TigerVNC (default) or TurboVNC
+# Instalar servidor VNC (TigerVNC como padrão)
 ARG vncserver=tigervnc
 RUN if [ "${vncserver}" = "tigervnc" ]; then \
-        echo "Installing TigerVNC"; \
+        echo "Instalando TigerVNC"; \
         apt-get -y -qq update; \
         apt-get -y -qq install \
             tigervnc-standalone-server \
@@ -35,8 +36,7 @@ RUN if [ "${vncserver}" = "tigervnc" ]; then \
     fi
 ENV PATH=/opt/TurboVNC/bin:$PATH
 RUN if [ "${vncserver}" = "turbovnc" ]; then \
-        echo "Installing TurboVNC"; \
-        # Install instructions from https://turbovnc.org/Downloads/YUM
+        echo "Instalando TurboVNC"; \
         wget -q -O- https://packagecloud.io/dcommander/turbovnc/gpgkey | \
         gpg --dearmor >/etc/apt/trusted.gpg.d/TurboVNC.gpg; \
         wget -O /etc/apt/sources.list.d/TurboVNC.list https://raw.githubusercontent.com/TurboVNC/repo/main/TurboVNC.list; \
@@ -47,14 +47,23 @@ RUN if [ "${vncserver}" = "turbovnc" ]; then \
         rm -rf /var/lib/apt/lists/*; \
     fi
 
+# Retornar ao usuário padrão
 USER $NB_USER
 
-# Install the environment first, and then install the package separately for faster rebuilds
+# Atualizar o ambiente Conda e instalar pacotes Python
 COPY --chown=$NB_UID:$NB_GID environment.yml /tmp
 RUN . /opt/conda/bin/activate && \
     mamba env update --quiet --file /tmp/environment.yml
 
+# Copiar o repositório para o contêiner
 COPY --chown=$NB_UID:$NB_GID . /opt/install
 RUN . /opt/conda/bin/activate && \
     mamba install -y -q "nodejs>=22" && \
     pip install /opt/install
+
+# Instalar as dependências Python diretamente via requirements.txt
+COPY --chown=$NB_UID:$NB_GID requirements.txt /tmp/requirements.txt
+RUN pip install -r /tmp/requirements.txt
+
+# Copiar o script de monitoramento para o contêiner
+COPY --chown=$NB_UID:$NB_GID monitor.py /opt/install/monitor.py
