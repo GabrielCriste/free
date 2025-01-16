@@ -51,8 +51,7 @@ RUN if [ "${vncserver}" = "turbovnc" ]; then \
 # Retornar ao usuário padrão
 USER $NB_USER
 
-ADD . /opt/install 
-RUN fix-permissions /opt/install
+
 
 # Atualizar o ambiente Conda e instalar pacotes Python
 COPY --chown=$NB_UID:$NB_GID environment.yml /tmp
