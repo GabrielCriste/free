@@ -61,9 +61,7 @@ RUN . /opt/conda/bin/activate && \
     mamba install -y -q "nodejs>=22" && \
     pip install /opt/install
 
-# Instalar as dependências Python diretamente via requirements.txt
-COPY --chown=$NB_UID:$NB_GID requirements.txt /tmp/requirements.txt
-RUN pip install -r /tmp/requirements.txt
+
 
 # Copiar o script de monitoramento para o contêiner
 COPY --chown=$NB_UID:$NB_GID monitor.py /opt/install/monitor.py
