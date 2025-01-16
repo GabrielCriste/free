@@ -2,6 +2,7 @@
   "NotebookApp": {
     "nbserver_extensions": {
       "jupyter_remote_desktop_proxy": true
-    }
+    },
+    "shutdown_no_activity_timeout": 0  // Desativa o timeout por inatividade
   }
 }
