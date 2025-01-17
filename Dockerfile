@@ -51,7 +51,19 @@ RUN if [ "${vncserver}" = "tigervnc" ]; then \
         rm -rf /var/lib/apt/lists/*; \
     fi
 
-ENV PATH=/opt/firefox:$PATH
+# Instalar TurboVNC, caso necessário
+ENV PATH=/opt/TurboVNC/bin:$PATH
+RUN if [ "${vncserver}" = "turbovnc" ]; then \
+        echo "Instalando TurboVNC"; \
+        wget -q -O- https://packagecloud.io/dcommander/turbovnc/gpgkey | \
+        gpg --dearmor >/etc/apt/trusted.gpg.d/TurboVNC.gpg; \
+        wget -O /etc/apt/sources.list.d/TurboVNC.list https://raw.githubusercontent.com/TurboVNC/repo/main/TurboVNC.list; \
+        apt-get -y -qq update; \
+        apt-get -y -qq install \
+            turbovnc \
+        ; \
+        rm -rf /var/lib/apt/lists/*; \
+    fi
 
 # apt-get may result in root-owned directories/files under $HOME
 RUN chown -R $NB_UID:$NB_GID $HOME
