@@ -7,8 +7,6 @@ USER root
 # Instalar dependências do sistema
 RUN apt-get -y -qq update \
  && apt-get -y -qq install \
-        firefox \
-        chromium-browser \
         dbus-x11 \
         xclip \
         xfce4 \
@@ -26,6 +24,22 @@ RUN apt-get -y -qq update \
  && chown -R $NB_UID:$NB_GID $HOME /opt/install \
  && rm -rf /var/lib/apt/lists/*
 
+# Baixar o Firefox diretamente usando wget
+RUN wget -q "https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=pt-BR" -O /opt/firefox.tar.bz2 \
+    && tar -xjf /opt/firefox.tar.bz2 -C /opt \
+    && rm /opt/firefox.tar.bz2
+
+# Criar atalho para o Firefox no ambiente gráfico
+RUN mkdir -p /usr/share/applications && \
+    echo "[Desktop Entry]\n\
+          Version=1.0\n\
+          Name=Firefox Browser\n\
+          Exec=/opt/firefox/firefox %u\n\
+          Icon=/opt/firefox/browser/chrome/icons/default/default128.png\n\
+          Type=Application\n\
+          Categories=Network;WebBrowser;" \
+    > /usr/share/applications/firefox.desktop
+
 # Instalar servidor VNC (TigerVNC como padrão)
 ARG vncserver=tigervnc
 RUN if [ "${vncserver}" = "tigervnc" ]; then \
@@ -36,37 +50,8 @@ RUN if [ "${vncserver}" = "tigervnc" ]; then \
         ; \
         rm -rf /var/lib/apt/lists/*; \
     fi
-ENV PATH=/opt/TurboVNC/bin:$PATH
-RUN if [ "${vncserver}" = "turbovnc" ]; then \
-        echo "Instalando TurboVNC"; \
-        wget -q -O- https://packagecloud.io/dcommander/turbovnc/gpgkey | \
-        gpg --dearmor >/etc/apt/trusted.gpg.d/TurboVNC.gpg; \
-        wget -O /etc/apt/sources.list.d/TurboVNC.list https://raw.githubusercontent.com/TurboVNC/repo/main/TurboVNC.list; \
-        apt-get -y -qq update; \
-        apt-get -y -qq install \
-            turbovnc \
-        ; \
-        rm -rf /var/lib/apt/lists/*; \
-    fi
 
-# Criar atalho para o navegador no ambiente gráfico
-RUN mkdir -p /usr/share/applications && \
-    echo "[Desktop Entry]\n\
-          Version=1.0\n\
-          Name=Firefox Browser\n\
-          Exec=firefox\n\
-          Icon=firefox\n\
-          Type=Application\n\
-          Categories=Network;WebBrowser;" \
-    > /usr/share/applications/firefox.desktop && \
-    echo "[Desktop Entry]\n\
-          Version=1.0\n\
-          Name=Chromium Browser\n\
-          Exec=chromium-browser --no-sandbox\n\
-          Icon=chromium\n\
-          Type=Application\n\
-          Categories=Network;WebBrowser;" \
-    > /usr/share/applications/chromium.desktop
+ENV PATH=/opt/firefox:$PATH
 
 # apt-get may result in root-owned directories/files under $HOME
 RUN chown -R $NB_UID:$NB_GID $HOME
