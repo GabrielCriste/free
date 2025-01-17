@@ -8,6 +8,7 @@ USER root
 RUN apt-get -y -qq update \
  && apt-get -y -qq install \
         firefox \
+        chromium-browser \
         dbus-x11 \
         xclip \
         xfce4 \
@@ -24,20 +25,6 @@ RUN apt-get -y -qq update \
  && mkdir -p /opt/install \
  && chown -R $NB_UID:$NB_GID $HOME /opt/install \
  && rm -rf /var/lib/apt/lists/*
-
-# Criar o atalho para o Firefox no desktop XFCE4
-RUN mkdir -p /root/Desktop && \
-    cat <<EOF > /root/Desktop/firefox.desktop
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Firefox
-Exec=firefox
-Icon=firefox
-Terminal=false
-Categories=Network;WebBrowser;
-EOF
-RUN chmod +x /root/Desktop/firefox.desktop
 
 # Instalar servidor VNC (TigerVNC como padrão)
 ARG vncserver=tigervnc
@@ -62,12 +49,30 @@ RUN if [ "${vncserver}" = "turbovnc" ]; then \
         rm -rf /var/lib/apt/lists/*; \
     fi
 
+# Criar atalho para o navegador no ambiente gráfico
+RUN mkdir -p /usr/share/applications && \
+    echo "[Desktop Entry]\n\
+          Version=1.0\n\
+          Name=Firefox Browser\n\
+          Exec=firefox\n\
+          Icon=firefox\n\
+          Type=Application\n\
+          Categories=Network;WebBrowser;" \
+    > /usr/share/applications/firefox.desktop && \
+    echo "[Desktop Entry]\n\
+          Version=1.0\n\
+          Name=Chromium Browser\n\
+          Exec=chromium-browser --no-sandbox\n\
+          Icon=chromium\n\
+          Type=Application\n\
+          Categories=Network;WebBrowser;" \
+    > /usr/share/applications/chromium.desktop
+
 # apt-get may result in root-owned directories/files under $HOME
 RUN chown -R $NB_UID:$NB_GID $HOME
 
 ADD . /opt/install
 RUN fix-permissions /opt/install
-
 
 # Retornar ao usuário padrão
 USER $NB_USER
