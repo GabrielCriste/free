@@ -24,10 +24,7 @@ RUN apt-get -y -qq update \
  && chown -R $NB_UID:$NB_GID $HOME /opt/install \
  && rm -rf /var/lib/apt/lists/*
 
-# Baixar o Firefox diretamente usando wget
-RUN wget -q "https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=pt-BR" -O /opt/firefox.tar.bz2 \
-    && tar -xjf /opt/firefox.tar.bz2 -C /opt \
-    && rm /opt/firefox.tar.bz2
+
 
 # Criar atalho para o Firefox no ambiente gráfico
 RUN mkdir -p /usr/share/applications && \
