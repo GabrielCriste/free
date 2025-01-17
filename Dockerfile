@@ -62,6 +62,13 @@ RUN if [ "${vncserver}" = "turbovnc" ]; then \
         rm -rf /var/lib/apt/lists/*; \
     fi
 
+# apt-get may result in root-owned directories/files under $HOME
+RUN chown -R $NB_UID:$NB_GID $HOME
+
+ADD . /opt/install
+RUN fix-permissions /opt/install
+
+
 # Retornar ao usuário padrão
 USER $NB_USER
 
