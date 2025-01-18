@@ -41,6 +41,9 @@ Categories=Network;WebBrowser;\n\
 StartupNotify=true" \
     > /usr/share/applications/firefox.desktop
 
+# Corrigir o formato do arquivo .desktop
+RUN sed -i '1s/^/ [Desktop Entry]\n/' /usr/share/applications/firefox.desktop
+
 # Instalar servidor VNC (TigerVNC como padrão)
 ARG vncserver=tigervnc
 RUN if [ "${vncserver}" = "tigervnc" ]; then \
