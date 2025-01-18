@@ -24,7 +24,7 @@ RUN apt-get -y -qq update \
  && chown -R $NB_UID:$NB_GID $HOME /opt/install \
  && rm -rf /var/lib/apt/lists/*
 
-# Baixar o Firefox diretamente usando wget
+# Baixar e instalar o Firefox diretamente usando wget
 RUN wget -q "https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=pt-BR" -O /opt/firefox.tar.bz2 \
     && tar -xjf /opt/firefox.tar.bz2 -C /opt \
     && rm /opt/firefox.tar.bz2
@@ -32,12 +32,13 @@ RUN wget -q "https://download.mozilla.org/?product=firefox-latest&os=linux64&lan
 # Criar atalho para o Firefox no ambiente gráfico
 RUN mkdir -p /usr/share/applications && \
     echo "[Desktop Entry]\n\
-          Version=1.0\n\
-          Name=Firefox Browser\n\
-          Exec=/opt/firefox/firefox %u\n\
-          Icon=/opt/firefox/browser/chrome/icons/default/default128.png\n\
-          Type=Application\n\
-          Categories=Network;WebBrowser;" \
+Version=1.0\n\
+Name=Firefox Browser\n\
+Exec=/opt/firefox/firefox %u\n\
+Icon=/opt/firefox/browser/chrome/icons/default/default128.png\n\
+Type=Application\n\
+Categories=Network;WebBrowser;\n\
+StartupNotify=true" \
     > /usr/share/applications/firefox.desktop
 
 # Instalar servidor VNC (TigerVNC como padrão)
@@ -65,9 +66,10 @@ RUN if [ "${vncserver}" = "turbovnc" ]; then \
         rm -rf /var/lib/apt/lists/*; \
     fi
 
-# apt-get may result in root-owned directories/files under $HOME
+# Corrigir permissões no diretório do usuário
 RUN chown -R $NB_UID:$NB_GID $HOME
 
+# Adicionar scripts e pacotes adicionais
 ADD . /opt/install
 RUN fix-permissions /opt/install
 
