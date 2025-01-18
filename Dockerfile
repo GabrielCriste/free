@@ -4,6 +4,11 @@ FROM quay.io/jupyter/base-notebook:2024-12-31
 # Executar comandos como root
 USER root
 
+RUN apt-get -y update \
+ && apt-get install -y dbus-x11 \
+   firefox \
+
+   
 # Instalar dependências do sistema
 RUN apt-get -y -qq update \
  && apt-get -y -qq install \
