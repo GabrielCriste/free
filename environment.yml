@@ -1,4 +1,3 @@
-Conda forge 
 channels:
   - conda-forge
   - defaults
@@ -9,3 +8,4 @@ dependencies:
   - websockify
   - firefox  # Adicionando o Firefox aqui
   - pip
+  
