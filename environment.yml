@@ -1,12 +1,10 @@
-name: meu_ambiente
 channels:
   - conda-forge
   - defaults
+
 dependencies:
   - jupyter-server-proxy>=4.3.0
   - jupyterhub-singleuser
   - websockify
-  - firefox
+  - firefox  # Adicionando o Firefox aqui
   - pip
-  - wine
-  
