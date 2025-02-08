@@ -9,4 +9,3 @@ dependencies:
   - websockify
   - firefox  # Adicionando o Firefox aqui
   - pip
-  
