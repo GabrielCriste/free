@@ -2,10 +2,11 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - python=3.9
+  - jupyterlab
+  - mamba
   - jupyter-server-proxy>=4.3.0
-  - jupyterhub-singleuser
-  - websockify
   - firefox
   - pip
-  - proot  # Adicionando o proot
+  - proot
   
