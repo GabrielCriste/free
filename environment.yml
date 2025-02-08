@@ -7,5 +7,6 @@ dependencies:
   - jupyterhub-singleuser
   - websockify
   - firefox  # Adicionando o Firefox aqui
+  - wine     # Adicionando o wine aqui
   - pip
   
