@@ -18,7 +18,7 @@ RUN apt-get -y -qq update \
         xubuntu-icon-theme \
         fonts-dejavu \
         git \
-        wine \
+     
     # Desabilitar o bloqueio automático de tela
  && apt-get -y -qq remove xfce4-screensaver \
     # Corrigir permissões e criar diretório para pacotes adicionais
