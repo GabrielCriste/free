@@ -8,5 +8,5 @@ dependencies:
   - websockify
   - firefox  # Adicionando o Firefox aqui
   - pip
-  - wine     # Adicionando o wine aqui
+ 
   
