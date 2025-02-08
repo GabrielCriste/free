@@ -1,4 +1,3 @@
-
 # Base image
 FROM quay.io/jupyter/base-notebook:2024-12-31
 
@@ -18,7 +17,6 @@ RUN apt-get -y -qq update \
         xubuntu-icon-theme \
         fonts-dejavu \
         git \
-        
      
     # Desabilitar o bloqueio automático de tela
  && apt-get -y -qq remove xfce4-screensaver \
