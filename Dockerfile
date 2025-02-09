@@ -23,10 +23,8 @@ RUN apt-get -y -qq update \
  && apt-get -y -qq remove xfce4-screensaver \
     # Corrigir permissões e criar diretório para pacotes adicionais
  && mkdir -p /opt/install \
- && chown -R $NB_UID:$NB_GID $HOME /opt/install \
+ && chown -R root:root $HOME /opt/install \
  && rm -rf /var/lib/apt/lists/*
-
-
 
 # Instalar servidor VNC (TigerVNC como padrão)
 RUN apt-get -y -qq update && apt-get -y -qq install tigervnc-standalone-server && \
@@ -41,28 +39,29 @@ RUN wget -q -O- https://packagecloud.io/dcommander/turbovnc/gpgkey | \
     rm -rf /var/lib/apt/lists/*
 
 # Corrigir permissões no diretório do usuário
-RUN chown -R $NB_UID:$NB_GID $HOME
+RUN chown -R root:root $HOME
 
 # Adicionar scripts e pacotes adicionais
 ADD . /opt/install
 RUN fix-permissions /opt/install
 
-# Retornar ao usuário padrão
-USER $NB_USER
-
 # Atualizar o ambiente Conda e instalar pacotes Python
-COPY --chown=$NB_UID:$NB_GID environment.yml /tmp
+COPY --chown=root:root environment.yml /tmp
 RUN . /opt/conda/bin/activate && \
     mamba env update --quiet --file /tmp/environment.yml
 
 # Copiar o repositório para o contêiner
-COPY --chown=$NB_UID:$NB_GID . /opt/install
+COPY --chown=root:root . /opt/install
 RUN . /opt/conda/bin/activate && \
     mamba install -y -q "nodejs>=22" && \
     pip install /opt/install
 
 # Copiar o script de monitoramento para o contêiner
-COPY --chown=$NB_UID:$NB_GID monitor.py /opt/install/monitor.py
+COPY --chown=root:root monitor.py /opt/install/monitor.py
+
+# Garantir que o usuário root seja mantido
+USER root
 
 # Configurar inicialização do VNC e ambiente gráfico
 CMD ["start.sh"]
+
